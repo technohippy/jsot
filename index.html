@@ -1,0 +1,36 @@
+<html>
+<head>
+  <title>JS Operation Transform</title>
+  <style>
+  .doc {
+    font-size: large;
+    font-family: monospace;
+    width: 350px;
+    height: 30px;
+    margin: 10px;
+  }
+  .contents {
+    font-size: xx-large;
+    font-weight: bold;
+    font-family: monospace;
+  }
+  </style>
+  <script src="http://www.google.com/jsapi"></script> 
+  <script>google.load("prototype", "1.6.0.3");</script>
+  <script src="jsot.js"></script>
+</head>
+<body onload="init()">
+  <div id="contents1" class="contents"></div>
+  <div id="contents2" class="contents"></div>
+  <button onclick="submit()">Submit</button>
+  <button onclick="location.reload()">Init</button><br/>
+  <div style="float:left">
+    <textarea id="doc1" class="doc" onkeydown="javascript:applyPersonalOperation(this, event)"></textarea>
+    <div id="log1"></div>
+  </div>
+  <div style="float:left">
+    <textarea id="doc2" class="doc" onkeydown="javascript:applyPersonalOperation(this, event)"></textarea>
+    <div id="log2"></div>
+  </div>
+</body>
+</html>
