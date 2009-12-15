@@ -26,20 +26,20 @@ var Version = Class.create({
   }
 });
 
-var VersionedOperation = Class.create({
+var VersionedOp = Class.create({
   initialize: function(version, operation) {
-    this.version = version;
-    this.operation = operation;
+    this.version = version.clone();
+    this.operation = operation.clone();
   },
   apply: function(doc) {
     this.operation.apply(doc);
   },
   clone: function() {
-    return new VersionedOperation(this.version.clone(), this.operation.clone());
+    return new VersionedOp(this.version.clone(), this.operation.clone());
   },
   toString: function() {
-    //return this.version.toString() + this.operation.toString();
-    return this.operation.toString();
+    return this.version.toString() + this.operation.toString();
+    //return this.operation.toString();
   }
 });
 
@@ -59,10 +59,10 @@ var Document = Class.create({
     this.opponent = opponent;
   },
   addOp: function(op) {
-    this.ops.push(new VersionedOperation(this.version.clone(), op));
+    this.ops.push(new VersionedOp(this.version.clone(), op));
   },
-  receiveOp: function(op, version) {
-    this.receivedOps.push(new VersionedOperation(version.reverseClone(), op));
+  receiveOp: function(op) {
+    this.receivedOps.push(op.clone());
   },
   applyAll: function() {
     for (var i = 0; i < this.ops.length; i++) {
@@ -74,8 +74,7 @@ var Document = Class.create({
     this.ops = $A();
     for (var i = 0; i < this.receivedOps.length; i++) {
       this.receivedOps[i].apply(this);
-      //this.appliedOps.push(this.receivedOps[i].clone());
-      this.submittedOps.push(this.receivedOps[i].clone());
+      this.submittedOps.push(new VersionedOp(this.version, this.receivedOps[i]));
       this.version.yourNext();
     }
     this.receivedOps = $A();
@@ -92,7 +91,6 @@ var Document = Class.create({
     var diff = this.version.myVersion - version.yourVersion;
     for (var i = this.appliedOps.length - diff; i < this.appliedOps.length; i++) {
       for (var j = 0; j < submittedOps.length; j++) {
-        //submittedOps[j].transformWith(this.appliedOps[i]);
         submittedOps[j].operation.transformWith(this.appliedOps[i].operation);
       }
     }
@@ -107,8 +105,8 @@ var Document = Class.create({
     this.elm.value = this.contents;
   },
   inspect: function() {
-    //var val = this.contents + '<br />' + this.version.toString() + '<br />';
-    var val = this.version.toString() + '<br />';
+    //var val = this.version.toString() + '<br />';
+    var val = '';
 
     val += '<div style="float:left; margin-right:10px;">';
     for (var i = 0; i < this.appliedOps.length; i++) {
@@ -121,6 +119,7 @@ var Document = Class.create({
       val += this.submittedOps[i].toString() + '<br />';
     }
     val += '</div><br style="clear:both" />';
+    val += this.version.toString() + '<br />';
 
     if (this.logElm) {
       this.logElm.innerHTML = val;
@@ -261,13 +260,11 @@ Operation.transform = function(doc1, doc2) {
   //alert(toSAA(transformations));
   for (var j1 = 0; j1 < transformations.length - 1; j1++) {
     var last = transformations[j1].length - 1;
-    //doc1.addOp(transformations[j1][last][1]);
-    doc1.receiveOp(transformations[j1][last][1], doc2.version);
+    doc1.receiveOp(transformations[j1][last][1]);
   }
   for (var j2 = 0; j2 < transformations[0].length - 1; j2++) {
     var last = transformations.length - 1;
-    //doc2.addOp(transformations[last][j2][0]);
-    doc2.receiveOp(transformations[last][j2][0], doc1.version);
+    doc2.receiveOp(transformations[last][j2][0]);
   }
   doc1.applyAll();
   doc2.applyAll();
