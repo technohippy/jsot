@@ -154,15 +154,6 @@ function toSAA(aa) {
 var Operation = Class.create({
 });
 Operation.transform = function(doc1, doc2) {
-/*
-var ver_before = doc2.version.clone();
-  doc1.sync();
-var ver_after = doc2.version.clone();
-doc2.version = ver_before;
-  doc2.sync();
-doc2.version = ver_after;
-*/
-
   var transformations = [[]];
   for (var i1 = 0; i1 < doc1.unsubmittedOps.length; i1++) {
     transformations[0].push([doc1.unsubmittedOps[i1].operation, null]);
