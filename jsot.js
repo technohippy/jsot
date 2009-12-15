@@ -15,6 +15,12 @@ var Version = Class.create({
     ver.yourVersion = this.yourVersion;
     return ver;
   },
+  reverseClone: function() {
+    var ver = new Version();
+    ver.myVersion = this.yourVersion;
+    ver.yourVersion = this.myVersion;
+    return ver;
+  },
   toString: function() {
     return "[" + this.myVersion + ", " + this.yourVersion + "]";
   }
@@ -32,7 +38,8 @@ var VersionedOperation = Class.create({
     return new VersionedOperation(this.version.clone(), this.operation.clone());
   },
   toString: function() {
-    return this.version.toString() + this.operation.toString();
+    //return this.version.toString() + this.operation.toString();
+    return this.operation.toString();
   }
 });
 
@@ -43,6 +50,7 @@ var Document = Class.create({
     this.version = new Version();
     this.contents = contents;
     this.ops = $A();
+    this.receivedOps = $A();
     this.appliedOps = $A();
     this.unsubmittedOps = $A();
     this.submittedOps = $A();
@@ -53,6 +61,9 @@ var Document = Class.create({
   addOp: function(op) {
     this.ops.push(new VersionedOperation(this.version.clone(), op));
   },
+  receiveOp: function(op, version) {
+    this.receivedOps.push(new VersionedOperation(version.reverseClone(), op));
+  },
   applyAll: function() {
     for (var i = 0; i < this.ops.length; i++) {
       this.ops[i].apply(this);
@@ -61,6 +72,13 @@ var Document = Class.create({
       this.version.myNext();
     }
     this.ops = $A();
+    for (var i = 0; i < this.receivedOps.length; i++) {
+      this.receivedOps[i].apply(this);
+      //this.appliedOps.push(this.receivedOps[i].clone());
+      this.submittedOps.push(this.receivedOps[i].clone());
+      this.version.yourNext();
+    }
+    this.receivedOps = $A();
   },
   sync: function() {
     var unsubmittedOps = $A();
@@ -252,11 +270,13 @@ doc2.version = ver_after;
   //alert(toSAA(transformations));
   for (var j1 = 0; j1 < transformations.length - 1; j1++) {
     var last = transformations[j1].length - 1;
-    doc1.addOp(transformations[j1][last][1]);
+    //doc1.addOp(transformations[j1][last][1]);
+    doc1.receiveOp(transformations[j1][last][1], doc2.version);
   }
   for (var j2 = 0; j2 < transformations[0].length - 1; j2++) {
     var last = transformations.length - 1;
-    doc2.addOp(transformations[last][j2][0]);
+    //doc2.addOp(transformations[last][j2][0]);
+    doc2.receiveOp(transformations[last][j2][0], doc1.version);
   }
   doc1.applyAll();
   doc2.applyAll();
